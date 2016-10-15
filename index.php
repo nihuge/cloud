@@ -1,43 +1,15 @@
 <?php
 include "includes/common.php";
-print_r($DB->fetch($DB->query("Select * from test")));
-$match="/<a name='file_title' target=\"_blank\" href=\"([\s\S]*?)\">([\s\S]*?)<span class=\"mhl\">([\s\S]*?)<\/span>([\s\S]*?)<\/a><\/div>\n<dl class=\"BotInfo\">\n<dt>种子大小:<span>([\s\S]*?)<\/span> &nbsp;&nbsp;&nbsp;&nbsp;\n文件数量:<span> ([\s\S]*?)<\/span> &nbsp;&nbsp;&nbsp;&nbsp;\n创建时间:<span> ([\s\S]*?) <\/span>\n<\/dt>\n<\/dl>\n<div class=\"dInfo\">\n请使用uTorrent,迅雷,旋风,百度115网盘等工具下载！<a href=\"([\s\S]*?) \">/";
+//print_r($DB->fetch($DB->query("Select * from test")));
 
-$output = curl("http://cililian.me/list/1/1.html");
-
-preg_match_all($match,$output,$str);
-
-//打印获得的数据
-$res = array();
-foreach($str as $key => $value){
-  if($key == 0){
-        echo "<br>";
-    }else{
-      foreach($str[$key] as $key1 => $value1) {
-          if($res[$key1]==""){
-            $res[$key1] = array();
-            $res[$key1][$key] = $value1;
-          }else{
-              $res[$key1][$key] = $value1;
-          }
-      }
-    }
-}
-echo json_encode((object)$res)."<br>";
-$seed = $_GET['seed'];
-$out = curl("http://i.vod.xunlei.com/req_subBT/info_hash/".$seed."/req_num/1000/req_offset/0");
-$dejson = json_decode($out,TRUE);
-if(count($dejson['resp']['subfile_list'])>0){
-    foreach($dejson['resp']['subfile_list'] as $key=>$value){
-        echo $key."index:".$value['index']."<br>";
-        echo $key."name:".$value['name']."<br>";
-        echo $key."file_size:".$value['file_size']."<br>";
-    }
-}else{
-    echo "没有数据";
+if($_GET['app']=='t'){
+    gettrr();
+}elseif($_GET['app']=='h'){
+    gethash();
+}elseif($_GET['app']=='m'){
+    getmove();
 }
 
-//print_r($dejson);
 
 function curl($url){
 //初始化
@@ -56,5 +28,58 @@ function curl($url){
 
     return $output;
 }
+function gettrr()
+{
+    $word = $_GET['word'];
+    $page = $_GET['page'];
+    //打印获得的数据
+    $match = "/<a name='file_title' target=\"_blank\" href=\"\/xiangxi\/([\s\S]*?)\">([\s\S]*?)<span class=\"mhl\">([\s\S]*?)<\/span>([\s\S]*?)</";
+    $output = curl("http://cililian.me/list/" . $word . "/" . $page . ".html");
+    preg_match_all($match, $output, $str);
+    if (count($str) == 0) {
+        echo "没有搜索结果";
+        exit();
+    } else {
+        $res = array();
+        foreach ($str as $key => $value) {
+            if ($key == 0) {
+
+            } else {
+                foreach ($str[$key] as $key1 => $value1) {
+                    if ($res[$key1] == "") {
+                        $res[$key1] = array();
+                        $res[$key1][$key] = $value1;
+                    } else {
+                        $res[$key1][$key] = $value1;
+                }
+                }
+            }
+        }
+        echo htmlspecialchars($st = json_encode((object)$res));
+        exit();
+    }
+}
 
 
+function gethash(){
+    $seed = $_GET['seed'];
+    $out = curl("http://i.vod.xunlei.com/req_subBT/info_hash/".$seed."/req_num/1000/req_offset/0");
+    $dejson = json_decode($out,TRUE);
+    if(count($dejson['resp']['subfile_list'])>0){
+        foreach($dejson['resp']['subfile_list'] as $key=>$value){
+            echo "index=".$value['index']."<br>";
+            echo "name=".$value['name']."<br>";
+            echo "file_size=".$value['file_size']."<br>";
+            echo "".$value['']."<br>";
+        }
+    }else{
+        echo "没有数据";
+    }
+    exit();
+}
+function getmove(){
+    $hash=$_GET['hash'];
+    $index=$_GET['index'];
+    $ret=curl("http://aa7761610.s180.cnaaa8.com/2944423432_11_14.php?hash=".$hash."&index=".$index);
+}
+?>
