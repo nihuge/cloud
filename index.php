@@ -2,12 +2,16 @@
 include "includes/common.php";
 //print_r($DB->fetch($DB->query("Select * from test")));
 
-if($_GET['app']=='t'){
+if($_GET['app'] == 't'){
     gettrr();
-}elseif($_GET['app']=='h'){
+}elseif($_GET['app'] == 'h'){
     gethash();
-}elseif($_GET['app']=='m'){
+}elseif($_GET['app'] == 'm'){
     getmove();
+}elseif($_GET['app'] == "test"){
+    gettrr2();
+}else{
+    exit();
 }
 
 
@@ -68,7 +72,7 @@ function gethash(){
     if(count($dejson['resp']['subfile_list'])>0){
         $hashs = array();
         $num = 0;
-        foreach($dejson['resp']['subfile_list'] as $key=>$value){
+        foreach($dejson['resp']['subfile_list'] as $key => $value){
                 $hashs[$num] = array();
                 $hashs[$num]["index"] = $value['index'];
                 $hashs[$num]["name"] = urldecode($value['name']);
@@ -90,11 +94,11 @@ function gethash(){
 
 
 function getmove(){
-    $hash=$_GET['hash'];
-    $index=$_GET['index'];
+    $hash = $_GET['hash'];
+    $index = $_GET['index'];
     $metch = "/<cookie>([\s\S]*?)<\/cookie><\/br><url>([\s\S]*?)<\/url>/";
-    $ret=curl("http://aa7761610.s180.cnaaa8.com/2944423432_11_14.php?hash=".$hash."&index=".$index);
-    if($ret<>"﻿无效资源        "){
+    $ret = curl("http://aa7761610.s180.cnaaa8.com/2944423432_11_14.php?hash=".$hash."&index=".$index);
+    if($ret <> "﻿无效资源        "){
     preg_match($metch, $ret, $str1);
         $returl = array(
             'cookie' => $str1['1'],
@@ -105,9 +109,50 @@ function getmove(){
         echo $ret." hash:".$_GET['hash']." index:".$_GET['index'];
     }
 }
-function gettrr2(){
+function gettrr2()
+{
     $metch1 = "/<span class=\"highlight\">(\W+)<\/span>/";
     $metch2 = "/<a class=\"title\" href=\"\/view\/([A-Za-z0-9]{40})([A-Za-z0-9]{1,9})\">([\s\S]*?)<\/a>/";
-    $res=curl("http://www.shenmidizhi.com/list/".$_GET['word']."-hot-desc-".$_GET['page']);
+    $ret1 = curl("http://www.shenmidizhi.com/list/" . $_GET['word'] . "-hot-desc-" . $_GET['page']);
+    $ret2 = preg_replace($metch1, "$1", $ret1);
+    preg_match_all($metch2, $ret2, $ret3);
+    if (count($ret3) == 0) {
+        echo "没有搜索结果";
+        exit();
+    } else {
+        $res = array();
+        foreach ($ret3 as $key => $value) {
+            if ($key == 0) {
+                echo '';
+            } else {
+                foreach ($ret3[$key] as $key1 => $value1) {
+                    if ($res[$key1] == "") {
+                        $res[$key1] = array();
+                        $res[$key1][$key] = $value1;
+                    } else {
+                        $res[$key1][$key] = $value1;
+                    }
+                }
+            }
+        }
+    }
+    echo json_encode((object)$res);
+    exit();
 }
+/*
+ * 创建表代码
+ * create table h(
+   hid INT(10) NOT NULL AUTO_INCREMENT,
+   hname VARCHAR(255),
+   hash VARCHAR(40) NOT NULL,
+   hindex INT(255) NOT NULL,
+   url VARCHAR(255) NOT NULL,
+   cookie VARCHAR(255) not null,
+   hi VARCHAR(255) NOT null,
+   PRIMARY KEY (hid)
+);
+ */
+/*
+ *
+ */
 ?>
