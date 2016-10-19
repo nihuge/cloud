@@ -1,7 +1,5 @@
 <?php
-include "includes/common.php";
 //print_r($DB->fetch($DB->query("Select * from test")));
-
 if($_GET['app'] == 't'){
     gettrr();
 }elseif($_GET['app'] == 'h'){
@@ -94,6 +92,7 @@ function gethash(){
 
 
 function getmove(){
+
     $hash = $_GET['hash'];
     $index = $_GET['index'];
     $metch = "/<cookie>([\s\S]*?)<\/cookie><\/br><url>([\s\S]*?)<\/url>/";
@@ -105,13 +104,26 @@ function getmove(){
             'url' => $str1['2']
         );
     echo json_encode($returl);
+        require "includes/common.php";
+        $qurey = $DB->query("INSERT INTO h(`hash`, `hindex`, `url`, `cookie`, `hi`) VALUES ('{$hash}','{$index}', '".$returl['url']."', '".$returl['cookie']."', '".$hash.$index."')");
+        if(!$qurey){
+            fopen('error.txt',"w");
+
+        }
     }else{
-        echo $ret." hash:".$_GET['hash']." index:".$_GET['index'];
+        require "includes/common.php";
+        $qurey = $DB->query("Select url,cookie from h where hi='".$hash.$index."'");
+        if($qurey){
+
+        }else{
+            echo $ret." hash:".$_GET['hash']." index:".$_GET['index'];
+        }
     }
+    exit();
 }
 function gettrr2()
 {
-    $metch1 = "/<span class=\"highlight\">(\W+)<\/span>/";
+    $metch1 = "/<span class=\"highlight\">([\s\S]*?)<\/span>/";
     $metch2 = "/<a class=\"title\" href=\"\/view\/([A-Za-z0-9]{40})([A-Za-z0-9]{1,9})\">([\s\S]*?)<\/a>/";
     $ret1 = curl("http://www.shenmidizhi.com/list/" . $_GET['word'] . "-hot-desc-" . $_GET['page']);
     $ret2 = preg_replace($metch1, "$1", $ret1);
