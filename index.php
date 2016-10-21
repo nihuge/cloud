@@ -1,5 +1,4 @@
 <?php
-//print_r($DB->fetch($DB->query("Select * from test")));
 if($_GET['app'] == 't'){
     gettrr();
 }elseif($_GET['app'] == 'h'){
@@ -12,21 +11,17 @@ if($_GET['app'] == 't'){
     exit();
 }
 
-
 function curl($url){
-//初始化
-    $ch = curl_init();
-
-//设置选项，包括URL
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_HEADER, 0);
-
-//执行并获取HTML文档内容
-    $output = curl_exec($ch);
-
-//释放curl句柄
-    curl_close($ch);
+    $output = file_get_contents($url);
+//    $ch = curl_init();
+//
+//    curl_setopt($ch, CURLOPT_URL, $url);
+//    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+//    curl_setopt($ch, CURLOPT_HEADER, 0);
+//
+//    $output = curl_exec($ch);
+//
+//    curl_close($ch);
 
     return $output;
 }
@@ -92,9 +87,17 @@ function gethash(){
 
 
 function getmove(){
-
+    require "includes/common.php";
     $hash = $_GET['hash'];
     $index = $_GET['index'];
+    $ret_seach = $DB->get_row("Select url,cookie from h where hi='".$hash.$index."'");
+    if($ret_seach['cookie'] <> ""){
+        $ret_rest = array(
+            "cookie" => $ret_seach['cookie'],
+            "url" => $ret_seach['url']
+        );
+        echo json_encode($ret_rest);
+    }else{
     $metch = "/<cookie>([\s\S]*?)<\/cookie><\/br><url>([\s\S]*?)<\/url>/";
     $ret = curl("http://aa7761610.s180.cnaaa8.com/2944423432_11_14.php?hash=".$hash."&index=".$index);
     if($ret <> "﻿无效资源        "){
@@ -104,28 +107,26 @@ function getmove(){
             'url' => $str1['2']
         );
     echo json_encode($returl);
-        require "includes/common.php";
         $qurey = $DB->query("INSERT INTO h(`hash`, `hindex`, `url`, `cookie`, `hi`) VALUES ('{$hash}','{$index}', '".$returl['url']."', '".$returl['cookie']."', '".$hash.$index."')");
         if(!$qurey){
-            fopen('error.txt',"w");
-
+            $file = fopen('error.txt',"a");
+            $data = '{"hash":"'.$hash.'","index":"'.$index.'","url":"'.$returl['cookie'].'","cookie":"'.$returl['cookie'].'","time":"'.data("Y-m-d H:i:s",time()).'"}';
+            fwrite($qurey,$data);
+            fclose($file);
         }
     }else{
-        require "includes/common.php";
-        $qurey = $DB->query("Select url,cookie from h where hi='".$hash.$index."'");
-        if($qurey){
-
-        }else{
             echo $ret." hash:".$_GET['hash']." index:".$_GET['index'];
-        }
     }
     exit();
+    }
 }
 function gettrr2()
 {
+    $word = $_GET['word'];
+    $page = isset($_GET['page'])?$_GET['page']:1;
     $metch1 = "/<span class=\"highlight\">([\s\S]*?)<\/span>/";
     $metch2 = "/<a class=\"title\" href=\"\/view\/([A-Za-z0-9]{40})([A-Za-z0-9]{1,9})\">([\s\S]*?)<\/a>/";
-    $ret1 = curl("http://www.shenmidizhi.com/list/" . $_GET['word'] . "-hot-desc-" . $_GET['page']);
+    $ret1 = curl("http://www.shenmidizhi.com/list/".$word."-hot-desc-".$page);
     $ret2 = preg_replace($metch1, "$1", $ret1);
     preg_match_all($metch2, $ret2, $ret3);
     if (count($ret3) == 0) {
